@@ -20,18 +20,24 @@ export async function GET(
       );
     }
 
-    // Update click count and last accessed time
-    await prisma.shortUrl.update({
-      where: { slug },
-      data: {
-        clicks: {
-          increment: 1,
+    // Update click count and last accessed time asynchronously (fire-and-forget)
+    // Don't await - let it run in the background so redirect is instant
+    prisma.shortUrl
+      .update({
+        where: { slug },
+        data: {
+          clicks: {
+            increment: 1,
+          },
+          lastAccessedAt: new Date(),
         },
-        lastAccessedAt: new Date(),
-      },
-    });
+      })
+      .catch((error) => {
+        // Log errors but don't block the redirect
+        console.error("Error updating click count:", error);
+      });
 
-    // Redirect to the target URL
+    // Redirect immediately without waiting for the update
     return NextResponse.redirect(shortUrl.targetUrl);
   } catch (error) {
     console.error("Error redirecting:", error);
