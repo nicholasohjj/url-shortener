@@ -1,0 +1,73 @@
+name: Sync Database Schema
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'prisma/schema.prisma'
+      - '.github/workflows/sync-db-schema.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'prisma/schema.prisma'
+  workflow_dispatch: # Allow manual triggering
+  schedule:
+    # Run daily at 2 AM UTC to catch any manual database changes
+    - cron: '0 2 * * *'
+
+jobs:
+  sync-schema:
+    name: Pull and Migrate Database Schema
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+      
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Setup Prisma
+        run: pnpm prisma generate
+      
+      - name: Pull and sync database schema
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node scripts/sync-schema.js
+      
+      - name: Check for uncommitted changes
+        id: check-changes
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Schema or migration changes detected"
+            git status
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No changes detected"
+          fi
+      
+      - name: Commit and push changes (if any)
+        if: steps.check-changes.outputs.has_changes == 'true' && github.event_name != 'pull_request'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add prisma/
+          git commit -m "chore: sync database schema and migrations [skip ci]" || exit 0
+          git push
+

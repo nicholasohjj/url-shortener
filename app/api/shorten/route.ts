@@ -64,8 +64,15 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error creating short URL:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorDetails = error instanceof Error ? error.stack : String(error);
+    console.error("Error details:", errorDetails);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { 
+        error: "Internal server error",
+        message: errorMessage,
+        ...(process.env.NODE_ENV === "development" && { details: errorDetails })
+      },
       { status: 500 }
     );
   }

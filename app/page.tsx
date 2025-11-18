@@ -75,6 +75,7 @@ export default function Home() {
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="https://example.com"
                 required
+                suppressHydrationWarning
                 className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500"
               />
             </div>
@@ -93,6 +94,7 @@ export default function Home() {
                 onChange={(e) => setCustomSlug(e.target.value)}
                 placeholder="my-custom-slug"
                 pattern="[a-zA-Z0-9-_]+"
+                suppressHydrationWarning
                 className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500"
               />
               <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
