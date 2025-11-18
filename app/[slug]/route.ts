@@ -9,8 +9,20 @@ export async function GET(
   try {
     const { slug } = await params;
 
-    // Update click count and last accessed time, and get targetUrl in one query asynchronously (fire-and-forget)
-    const shortUrl = // Don't await - let it run in the background so redirect is instant
+    // Find the short URL to get the target URL
+    const shortUrl = await prisma.shortUrl.findUnique({
+      where: { slug },
+    });
+
+    if (!shortUrl) {
+      return NextResponse.json(
+        { error: "Short URL not found" },
+        { status: 404 }
+      );
+    }
+
+    // Update click count and last accessed time asynchronously (fire-and-forget)
+    // Don't await - let it run in the background so redirect is instant
     prisma.shortUrl
       .update({
         where: { slug },
@@ -20,9 +32,6 @@ export async function GET(
           },
           lastAccessedAt: new Date(),
         },
-      select: {
-        targetUrl: true,
-      },
       })
       .catch((error) => {
         // Log errors but don't block the redirect
