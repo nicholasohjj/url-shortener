@@ -1,0 +1,35 @@
+@startuml URL Shortener - Database Schema
+
+!theme plain
+skinparam linetype ortho
+
+title URL Shortener - Database Entity Relationship Diagram
+
+entity "ShortUrl" {
+  * **id** : String (PK, CUID)
+  --
+  * **slug** : String (UNIQUE, INDEXED)
+  * **targetUrl** : String
+  * **clicks** : Integer (default: 0)
+  * **lastAccessedAt** : DateTime (nullable)
+  * **createdAt** : DateTime (auto)
+  * **updatedAt** : DateTime (auto)
+}
+
+note right of ShortUrl
+  **Indexes:**
+  - Primary Key: id
+  - Unique Index: slug (for fast lookups)
+  
+  **Constraints:**
+  - slug must be unique
+  - targetUrl must be valid URL
+  - clicks >= 0
+  
+  **Performance:**
+  - slug index enables O(1) lookups
+  - Connection pooling via Prisma
+end note
+
+@enduml
+

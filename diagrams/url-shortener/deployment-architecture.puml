@@ -1,0 +1,93 @@
+@startuml URL Shortener - Deployment Architecture
+
+!theme plain
+skinparam linetype ortho
+
+title URL Shortener - Production Deployment Architecture
+
+cloud "Internet" {
+  [Users] as Users
+}
+
+cloud "CDN / Edge" {
+  [Cloudflare / Vercel Edge] as CDN
+}
+
+node "Application Layer" {
+  [Next.js App\n(Vercel/Serverless)] as App1
+  [Next.js App\n(Vercel/Serverless)] as App2
+  [Next.js App\n(Vercel/Serverless)] as App3
+}
+
+node "Database Layer" {
+  database "PostgreSQL\n(Managed Service)" as DB {
+    [Primary] as Primary
+    [Read Replica] as Replica
+  }
+}
+
+node "CI/CD" {
+  [GitHub Actions] as CI
+  [Schema Sync Workflow] as Sync
+}
+
+node "Monitoring" {
+  [Error Tracking] as Errors
+  [Performance Monitoring] as Perf
+  [Analytics] as Analytics
+}
+
+Users --> CDN : HTTPS
+CDN --> App1 : Load Balanced
+CDN --> App2
+CDN --> App3
+
+App1 --> Primary : Read/Write
+App2 --> Primary : Read/Write
+App3 --> Primary : Read/Write
+
+App1 --> Replica : Read Queries
+App2 --> Replica : Read Queries
+App3 --> Replica : Read Queries
+
+CI --> Sync : Trigger on schema changes
+Sync --> Primary : Apply migrations
+
+App1 --> Errors : Error logs
+App2 --> Errors
+App3 --> Errors
+
+App1 --> Perf : Metrics
+App2 --> Perf
+App3 --> Perf
+
+App1 --> Analytics : Click tracking
+App2 --> Analytics
+App3 --> Analytics
+
+note right of CDN
+  **Edge Benefits:**
+  - Global distribution
+  - DDoS protection
+  - SSL termination
+  - Caching static assets
+end note
+
+note right of DB
+  **Database Features:**
+  - Connection pooling
+  - Automated backups
+  - Read replicas for scale
+  - Point-in-time recovery
+end note
+
+note right of CI
+  **CI/CD Pipeline:**
+  - Auto schema sync
+  - Migration generation
+  - Automated testing
+  - Deployment on merge
+end note
+
+@enduml
+

@@ -185,15 +185,39 @@ pnpm db:sync
 
 ## 📊 System Design Diagrams
 
-The project includes comprehensive PlantUML diagrams in the `diagrams/` directory:
+The project includes comprehensive PlantUML diagrams in the `diagrams/url-shortener/` directory:
 
-- **System Overview** (`url-shortener/system-overview.puml`): Complete architecture diagram
-- **Component Diagram** (`url-shortener/component-diagram.puml`): Component relationships
-- **Create URL Sequence** (`url-shortener/create-url-sequence.puml`): Flow for creating short URLs
-- **Redirect Sequence** (`url-shortener/redirect-sequence.puml`): Flow for redirecting short URLs
-- **Data Flow** (`url-shortener/data-flow.puml`): Data flow through the system
+### Architecture Diagrams
+- **System Overview** (`system-overview.puml`): Complete architecture showing all components and their relationships
+- **Component Diagram** (`component-diagram.puml`): Detailed component relationships and interactions
+- **Deployment Architecture** (`deployment-architecture.puml`): Production deployment setup with CI/CD, monitoring, and infrastructure
+- **Database Schema** (`database-schema.puml`): Entity-relationship diagram of the database structure
 
-To view these diagrams, use a PlantUML viewer or VS Code extension.
+### Sequence Diagrams
+- **Create URL Sequence** (`create-url-sequence.puml`): Detailed flow for creating short URLs with validation and slug generation
+- **Redirect Sequence** (`redirect-sequence.puml`): Flow for redirecting users to target URLs with async click tracking
+
+### Flow & Activity Diagrams
+- **Data Flow** (`data-flow.puml`): Data flow through the entire system
+- **Activity Diagram** (`activity-diagram.puml`): Complete user journey from URL creation to redirection
+- **Error Handling Flow** (`error-handling-flow.puml`): Comprehensive error handling and validation flows
+- **State Diagram** (`state-diagram.puml`): Short URL lifecycle states (Created → Active → Archived)
+
+### Design Patterns
+- **Class Diagram** (`class-diagram.puml`): Object-oriented representation of the application structure
+- **CI/CD Workflow** (`cicd-workflow.puml`): Complete GitHub Actions workflow for database schema synchronization
+- **Diagrams Index** (`readme.puml`): Overview of all available diagrams
+
+### Viewing the Diagrams
+
+To view these diagrams, you can:
+
+1. **VS Code**: Install the "PlantUML" extension by jebbs
+2. **Online**: Use [PlantUML Online Server](http://www.plantuml.com/plantuml/uml/)
+3. **CLI**: Install PlantUML and use `plantuml diagrams/url-shortener/*.puml`
+4. **IntelliJ/WebStorm**: Built-in PlantUML support
+
+All diagrams use the `plain` theme for consistency and are optimized for both documentation and presentation.
 
 ## 🧪 Development
 
