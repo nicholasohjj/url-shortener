@@ -19,6 +19,10 @@ jobs:
   sync-schema:
     name: Pull and Migrate Database Schema
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
     
     steps:
       - name: Checkout code
@@ -42,8 +46,6 @@ jobs:
         run: pnpm prisma generate
       
       - name: Pull and sync database schema
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: node scripts/sync-schema.js
       
       - name: Check for uncommitted changes
