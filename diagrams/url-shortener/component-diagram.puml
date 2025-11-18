@@ -1,59 +1,87 @@
 @startuml URL Shortener - Component Diagram
 
 !theme plain
-skinparam componentStyle rectangle
 skinparam linetype ortho
 
-package "Client Layer" {
-  [Web Browser] as Browser
+title URL Shortener - Component Relationships
+
+package "Frontend Components" {
+  component [HomePage] as HomePage
+  component [URLForm] as Form
+  component [ShortURLDisplay] as Display
 }
 
-package "Next.js Application" {
-  [Frontend UI] as Frontend
-  [API Route: /api/shorten] as ShortenAPI
-  [Redirect Route: /<slug>] as RedirectRoute
+package "API Routes" {
+  component [POST /api/shorten] as ShortenAPI {
+    + validateURL()
+    + generateSlug()
+    + createShortUrl()
+  }
+  
+  component [GET /[slug]] as RedirectAPI {
+    + findShortUrl()
+    + updateClickCount()
+    + redirect()
+  }
 }
 
-package "Business Logic" {
-  [URL Validator] as Validator
-  [Slug Generator] as SlugGen
-  [Click Tracker] as Tracker
+package "Services" {
+  component [URLValidator] as Validator {
+    + isValidURL()
+  }
+  
+  component [SlugGenerator] as SlugGen {
+    + generateSlug()
+    + ensureUnique()
+  }
+  
+  component [ClickTracker] as Tracker {
+    + trackClick()
+    + updateMetrics()
+  }
 }
 
-package "Data Access Layer" {
-  [Prisma Client] as Prisma
+package "Data Access" {
+  component [PrismaClient] as Prisma {
+    + findUnique()
+    + create()
+    + update()
+  }
+  
+  component [Database] as DB {
+    + ShortUrl model
+  }
 }
 
-database "PostgreSQL Database" {
-  [ShortUrl Table] as DB
+HomePage --> Form : uses
+HomePage --> Display : uses
+Form --> ShortenAPI : POST request
+Display --> ShortenAPI : receives response
+
+ShortenAPI --> Validator : validates
+ShortenAPI --> SlugGen : generates
+ShortenAPI --> Prisma : creates record
+
+RedirectAPI --> Prisma : queries
+RedirectAPI --> Tracker : tracks (async)
+RedirectAPI --> HomePage : redirects
+
+Validator --> ShortenAPI : returns boolean
+SlugGen --> ShortenAPI : returns slug
+Tracker --> Prisma : updates
+
+Prisma --> DB : SQL queries
+
+' Styling
+skinparam component {
+  BackgroundColor #E8F5E9
+  BorderColor #2E7D32
 }
 
-Browser --> Frontend : HTTP Request
-Browser --> RedirectRoute : GET /<slug>
-
-Frontend --> ShortenAPI : POST /api/shorten\n{url, slug?}
-
-ShortenAPI --> Validator : Validate URL
-ShortenAPI --> SlugGen : Generate Unique Slug
-ShortenAPI --> Prisma : Create ShortUrl
-
-RedirectRoute --> Prisma : Find by Slug
-RedirectRoute --> Tracker : Update Clicks & Timestamp
-RedirectRoute --> Browser : HTTP 302 Redirect
-
-Prisma --> DB : SQL Queries
-Prisma --> DB : INSERT/UPDATE/SELECT
-
-note right of DB
-  Schema:
-  - id (String, PK)
-  - slug (String, Unique)
-  - targetUrl (String)
-  - clicks (Int)
-  - lastAccessedAt (DateTime?)
-  - createdAt (DateTime)
-  - updatedAt (DateTime)
-end note
+skinparam package {
+  BackgroundColor #F3E5F5
+  BorderColor #6A1B9A
+}
 
 @enduml
 

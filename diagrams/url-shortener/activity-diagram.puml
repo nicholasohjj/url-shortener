@@ -1,0 +1,65 @@
+@startuml URL Shortener - Activity Diagram
+
+!theme plain
+
+title URL Shortener - User Journey Activity Diagram
+
+start
+
+:User visits homepage;
+
+partition "Create Short URL" {
+  :Enter original URL;
+  if (Custom slug desired?) then (yes)
+    :Enter custom slug;
+  else (no)
+    :Auto-generate slug;
+  endif
+  
+  :Submit form;
+  :Validate URL format;
+  
+  if (URL valid?) then (no)
+    :Display error message;
+    stop
+  else (yes)
+  endif
+  
+  :Check slug uniqueness;
+  
+  if (Slug exists?) then (yes)
+    if (Custom slug?) then (yes)
+      :Append random suffix;
+    else (no)
+      :Generate new slug;
+    endif
+    :Retry uniqueness check;
+  else (no)
+  endif
+  
+  :Create database record;
+  :Display short URL;
+  :User copies short URL;
+}
+
+partition "Redirect Flow" {
+  :User clicks short URL;
+  :Lookup slug in database;
+  
+  if (Slug found?) then (no)
+    :Display 404 error;
+    stop
+  else (yes)
+  endif
+  
+  :Start async click tracking;
+  :Redirect to target URL;
+  :Update click count (background);
+  :Update lastAccessedAt (background);
+  :User lands on target site;
+}
+
+stop
+
+@enduml
+
