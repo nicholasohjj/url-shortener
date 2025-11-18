@@ -1,0 +1,44 @@
+@startuml URL Shortener - Redirect & Click Tracking Sequence
+
+!theme plain
+autonumber
+
+actor User
+participant "Web Browser" as Browser
+participant "Redirect Route\n/[slug]" as Redirect
+participant "Prisma Client" as Prisma
+database "PostgreSQL" as DB
+participant "Target Website" as Target
+
+User -> Browser: Visit /<slug>
+Browser -> Redirect: GET /<slug>
+
+Redirect -> Prisma: findUnique({slug})
+Prisma -> DB: SELECT * FROM ShortUrl\nWHERE slug = ?
+DB -> Prisma: ShortUrl | null
+Prisma -> Redirect: ShortUrl object
+
+alt Short URL not found
+  Redirect -> Browser: 404 Not Found\n{error: "Short URL not found"}
+  Browser -> User: Display error message
+else Short URL found
+  Redirect -> Prisma: update({\n  where: {slug},\n  data: {\n    clicks: increment(1),\n    lastAccessedAt: now()\n  }\n})
+  Prisma -> DB: UPDATE ShortUrl\nSET clicks = clicks + 1,\n    lastAccessedAt = NOW(),\n    updatedAt = NOW()\nWHERE slug = ?
+  DB -> Prisma: Updated ShortUrl
+  Prisma -> Redirect: Confirmation
+  
+  Redirect -> Browser: HTTP 302 Redirect\nLocation: <targetUrl>
+  Browser -> Target: GET <targetUrl>
+  Target -> Browser: Response (HTML, etc.)
+  Browser -> User: Display target website
+end
+
+note right of DB
+  Tracking Updates:
+  - clicks: incremented by 1
+  - lastAccessedAt: current timestamp
+  - updatedAt: current timestamp
+end note
+
+@enduml
+

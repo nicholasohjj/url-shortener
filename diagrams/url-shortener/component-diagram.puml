@@ -1,0 +1,59 @@
+@startuml URL Shortener - Component Diagram
+
+!theme plain
+skinparam componentStyle rectangle
+skinparam linetype ortho
+
+package "Client Layer" {
+  [Web Browser] as Browser
+}
+
+package "Next.js Application" {
+  [Frontend UI] as Frontend
+  [API Route: /api/shorten] as ShortenAPI
+  [Redirect Route: /<slug>] as RedirectRoute
+}
+
+package "Business Logic" {
+  [URL Validator] as Validator
+  [Slug Generator] as SlugGen
+  [Click Tracker] as Tracker
+}
+
+package "Data Access Layer" {
+  [Prisma Client] as Prisma
+}
+
+database "PostgreSQL Database" {
+  [ShortUrl Table] as DB
+}
+
+Browser --> Frontend : HTTP Request
+Browser --> RedirectRoute : GET /<slug>
+
+Frontend --> ShortenAPI : POST /api/shorten\n{url, slug?}
+
+ShortenAPI --> Validator : Validate URL
+ShortenAPI --> SlugGen : Generate Unique Slug
+ShortenAPI --> Prisma : Create ShortUrl
+
+RedirectRoute --> Prisma : Find by Slug
+RedirectRoute --> Tracker : Update Clicks & Timestamp
+RedirectRoute --> Browser : HTTP 302 Redirect
+
+Prisma --> DB : SQL Queries
+Prisma --> DB : INSERT/UPDATE/SELECT
+
+note right of DB
+  Schema:
+  - id (String, PK)
+  - slug (String, Unique)
+  - targetUrl (String)
+  - clicks (Int)
+  - lastAccessedAt (DateTime?)
+  - createdAt (DateTime)
+  - updatedAt (DateTime)
+end note
+
+@enduml
+

@@ -1,0 +1,65 @@
+@startuml URL Shortener - Create Short URL Sequence
+
+!theme plain
+autonumber
+
+actor User
+participant "Web Browser" as Browser
+participant "Frontend UI" as Frontend
+participant "API Route\n/api/shorten" as API
+participant "URL Validator" as Validator
+participant "Slug Generator\n(nanoid)" as SlugGen
+participant "Prisma Client" as Prisma
+database "PostgreSQL" as DB
+
+User -> Browser: Enter URL (and optional slug)
+Browser -> Frontend: Submit Form
+Frontend -> API: POST /api/shorten\n{url, slug?}
+
+alt URL not provided
+  API -> Browser: 400 Bad Request\n{error: "URL is required"}
+else Invalid URL format
+  API -> Validator: Validate URL
+  Validator -> API: Invalid URL
+  API -> Browser: 400 Bad Request\n{error: "Invalid URL format"}
+else Valid request
+  API -> Validator: Validate URL
+  Validator -> API: Valid URL
+  
+  alt Custom slug provided
+    API -> API: Use custom slug
+  else No custom slug
+    API -> SlugGen: Generate slug (8 chars)
+    SlugGen -> API: Random slug
+  end
+  
+  loop Ensure uniqueness (max 10 attempts)
+    API -> Prisma: findUnique({slug})
+    Prisma -> DB: SELECT * FROM ShortUrl WHERE slug = ?
+    DB -> Prisma: Result
+    Prisma -> API: ShortUrl | null
+    
+    alt Slug exists
+      API -> SlugGen: Generate new slug
+      SlugGen -> API: New slug
+    else Slug is unique
+      break
+    end
+  end
+  
+  alt Failed to generate unique slug
+    API -> Browser: 500 Internal Server Error\n{error: "Failed to generate unique slug"}
+  else Success
+    API -> Prisma: create({slug, targetUrl})
+    Prisma -> DB: INSERT INTO ShortUrl\n(slug, targetUrl, clicks, ...)
+    DB -> Prisma: Created ShortUrl
+    Prisma -> API: ShortUrl object
+    
+    API -> Browser: 200 OK\n{slug, shortUrl, targetUrl}
+    Browser -> Frontend: Display short URL
+    Frontend -> User: Show success message\nwith copy button
+  end
+end
+
+@enduml
+
