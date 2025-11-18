@@ -7,7 +7,6 @@ on:
       - develop
     paths:
       - 'prisma/schema.prisma'
-      - '.github/workflows/sync-db-schema.yml'
   pull_request:
     branches:
       - main
@@ -15,9 +14,6 @@ on:
     paths:
       - 'prisma/schema.prisma'
   workflow_dispatch: # Allow manual triggering
-  schedule:
-    # Run daily at 2 AM UTC to catch any manual database changes
-    - cron: '0 2 * * *'
 
 jobs:
   sync-schema:
